@@ -1,8 +1,7 @@
-import socket
 from utils import *
-import sys
+import socket
 
-class PScanner:
+class Udp:
 
     PORTS_DATA = "./ports.lists.json"
 
@@ -11,34 +10,35 @@ class PScanner:
         self.ports_info = {}
         self.remote_host = ""
     
-
     def get_ports(self):
-        data = json_data(PScanner.PORTS_DATA)
+        data = json_data(Udp.PORTS_DATA)
         for key in data.keys():
-            if(data[key][0]["tcp"]):
+            if(data[key][0]["udp"]):
                 self.ports_info[int(key)] = data[key][0]["description"]
 
-
-    # passiamo un ip invece che un dominio per questione di sicurezza
-
     def scan_port(self, port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # specifico famiglia e tipologia TCP
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # specifico famiglia e tipologia TCP
         sock.settimeout(1)
-        status = sock.connect_ex((self.remote_host, port)) # restituisce 0 se stabilisce connessione --> porta aperta
-        print(f"Scanning {self.remote_host} : {port}")
-        if status == 0:
+        try:
+            sock.sendto(b'', (self.remote_host, port))
+            print(f"Scanning {self.remote_host} : {port}")
+            sock.close() # Se non viene sollevata un'eccezione, la porta è probabilmente aperta
+            return True
+        except socket.timeout:
+            sock.close()
+            return False
+    
+    def append_port(self, port):
+        if self.scan_port(port):
             self.open_ports.append(port)
-        sock.close() # necessario chiudere la connessione
-
-
     
     def show_results(self):
         print("\nOpen ports")
         for port in self.open_ports:
             print(f"{str(port)} : {self.ports_info[port]}")
-        
+
     def run(self):
-        threadpool_exec(self.scan_port, self.ports_info.keys())
+        threadpool_exec(self.append_port, self.ports_info.keys())
         self.show_results()
     
     def start(self):
@@ -51,12 +51,8 @@ class PScanner:
             print("\nExiting...")
             sys.exit()
         self.run()
-        
 
 if __name__ == "__main__":
-    scanner = PScanner()
+    scanner = Udp()
     scanner.start()
-
-
-
 
