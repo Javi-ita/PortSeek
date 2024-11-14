@@ -5,17 +5,6 @@ import signal
 import sys
 import socket
 
-
-PORTS_DATA = "./ports.lists.json"
-
-
-def sigint_handler(sig, frame):
-    global should_stop
-    print("Caught SIGINT, exiting gracefully...")
-    should_stop = True
-    # Add your cleanup code here
-    sys.exit(0)
-
 def json_data(filename):
     with open(filename, "r") as file:
         data = json.load(file)
@@ -24,9 +13,12 @@ def json_data(filename):
 def threadpool_exec(function, iterable):
     thread_num = os.cpu_count()
     print(f"Number of workers {thread_num}\n")
-    with ThreadPool(thread_num) as pool:  
-        signal.signal(signal.SIGINT, sigint_handler)
+    with ThreadPool(thread_num) as pool:
         pool.map(function, iterable) # la funzione viene applicata per ogni elemento dell'iterabili
+        def sigint_handler(sig, frame):
+            print("Caught SIGINT, exiting gracefully...")
+            sys.exit(0)
+        signal.signal(signal.SIGINT, sigint_handler)
 
 def get_host_ip(target):
     try:
@@ -36,7 +28,16 @@ def get_host_ip(target):
         sys.exit()
     else:
         return ip_address
-    
-def ask_domain():
-    target = input("Inserisci il dominio o l'indirizzo IP: ")
-    return get_host_ip(target)
+
+def initialize():
+    print("\n------------  PORT SEEKER  ------------\n")
+    print("Scan TCP - 1")
+    print("Scan UDP - 2")
+    stringa = input("")
+    while(int(stringa) not in [1,2]):
+        print("Scelta non valida")
+        stringa = input("")
+    if stringa == "1":
+        return "TCP"
+    elif stringa ==  "2":
+        return "UDP"
