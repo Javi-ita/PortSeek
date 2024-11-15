@@ -4,6 +4,7 @@ import os
 import signal
 import sys
 import socket
+import ipaddress
 
 def json_data(filename):
     with open(filename, "r") as file:
@@ -12,22 +13,27 @@ def json_data(filename):
 
 def threadpool_exec(function, iterable):
     thread_num = os.cpu_count()
-    print(f"Number of workers {thread_num}\n")
     with ThreadPool(thread_num) as pool:
-        pool.map(function, iterable) # la funzione viene applicata per ogni elemento dell'iterabili
-        def sigint_handler(sig, frame):
-            print("Caught SIGINT, exiting gracefully...")
-            sys.exit(0)
-        signal.signal(signal.SIGINT, sigint_handler)
+        pool.map(function, iterable) # chiamata alla funzione per ogni elemento dell'iterabile
+
 
 def get_host_ip(target):
     try:
+        if(is_cidr_notation(target)):
+            return target
         ip_address = socket.gethostbyname(target)
     except socket.gaierror as e: 
         print(f"Errore: {e}")
         sys.exit()
     else:
         return ip_address
+    
+def is_cidr_notation(ip_string):
+    try:
+        ip_network = ipaddress.ip_network(ip_string)
+        return True
+    except ValueError:
+        return False
 
 def initialize():
     print("\n------------  PORT SEEKER  ------------\n")

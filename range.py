@@ -12,29 +12,19 @@ class Range(Scan):
     def __init__(self):
         super().__init__()
 
-    def get_ports(self):
-        data = json_data(Scan.PORTS_DATA)
-        for port in self.DEFAULT_PORTS:
-            self.ports_info[int(port)] = data[port][0]["description"]
-
-    def get_ports(self, ports):
+    def get_ports(self, ports=DEFAULT_PORTS):
         data = json_data(Scan.PORTS_DATA)
         for port in ports:
             self.ports_info[int(port)] = data[port][0]["description"]
 
+
     def request_ports(self):
-        stringa = input("\nInserire le porte che si desidera scansionare (intervallate da virgola): \n")
+        stringa = input("\nPorts: ")
         if len(stringa) == 0:
             self.get_ports()
         else:
             result = stringa.split(",")
             self.get_ports(result)
-
-    def add_ip(self):
-        stringa = input("Inserire in formato CIDR il range di ip che si desidera scansionare: \n")
-        network = ipaddress.IPv4Network(stringa)
-        for el in list(network.hosts()):
-            self.ip_list.append(Ip(str(el))) #aggiungo ad ip_list ogni ip del network come oggetto Ip
 
     def scan_port(self, ip, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # specifico famiglia e tipologia TCP

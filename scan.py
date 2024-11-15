@@ -34,11 +34,12 @@ class Scan(ABC):
         for i in range(0, len(self.ip_list)):
             for port in self.ip_list[i].open_ports:
                 print(f"{str(port)} : {self.ports_info[port]}")
-
+    
     def add_ip(self):
-        ip = Ip()
-        ip.ask_domain()
-        self.ip_list.append(ip)
+        stringa = get_host_ip(input("(CIDR format supported) Insert Ip or Domain: "))
+        network = ipaddress.IPv4Network(stringa)
+        for el in list(network.hosts()):
+            self.ip_list.append(Ip(str(el))) #aggiungo ad ip_list ogni ip del network come oggetto Ip
 
     def start(self):
         self.get_ports()
@@ -71,8 +72,7 @@ class Tcp(Scan):
         print(f"Scanning {ip.remote_host} : {port}")
         sock.close() # necessario chiudere la connessione
         return True if status == 0 else False
-    
-
+            
 class Udp(Scan):
 
     def __init__(self):
@@ -97,10 +97,11 @@ class Udp(Scan):
             return False
         
 if __name__ == "__main__":
-    if initialize() == "TCP":
+    i = initialize()
+    if i == "TCP":
         scanner = Tcp()
         scanner.start()
-    elif initialize() == "UDP":
+    elif i == "UDP":
         scanner = Udp()
         scanner.start()
 
