@@ -197,7 +197,7 @@
     ],
     "22": [
         {
-            "description": "Secure Shell (SSH) \u00e2\u20ac\u201d used for secure logins, file transfers (scp, sftp) and port forwarding",
+            "description": "Secure Shell (SSH) used for secure logins, file transfers (scp, sftp) and port forwarding",
             "udp": true,
             "status": "Official",
             "port": "22",
