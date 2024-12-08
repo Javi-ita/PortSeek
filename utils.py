@@ -4,6 +4,9 @@ import os
 import sys
 import socket
 import ipaddress
+from rich.console import Console
+
+console = Console()
 
 # Estrae dati dal file json
 def json_data(filename):
@@ -24,7 +27,7 @@ def get_host_ip(target):
             return target
         ip_address = socket.gethostbyname(target)
     except socket.gaierror as e: 
-        print(f"Errore: {e}")
+        console.print(f"Errore: {e}", style="bold red")
         sys.exit()
     else:
         return ip_address

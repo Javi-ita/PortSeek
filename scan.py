@@ -5,6 +5,7 @@ import sys
 from ip import Ip
 import time
 from scapy.all import sr1, IP, TCP, UDP
+from rich.table import Table
 
 class Scan(ABC):
 
@@ -25,7 +26,8 @@ class Scan(ABC):
             self.ports_info[int(port)] = data[port][0]["description"]
 
     def request_ports(self):
-        stringa = input("\nPorts: ") # Richiesta di porte da scannerizzare
+        console.print("\nPorte:", style="italic", end="")
+        stringa = input("") # Richiesta di porte da scannerizzare
         if len(stringa) == 0:
             self.get_ports()
         elif stringa.lower() == "all":
@@ -43,7 +45,7 @@ class Scan(ABC):
         start = time.time()
         threadpool_exec(self.append_port, self.ports_info.keys()) # richiama iterativamente append_port per ogni chiave nel dizionario
         rtt = (time.time() - start)
-        print(f"\nScanning completed in {rtt:.2f} seconds")
+        console.print(f"\nScansione completata in [bold blue]{rtt:.2f} secondi[/bold blue]")
         self.show_results()
     
     def append_port(self, port): 
@@ -54,17 +56,22 @@ class Scan(ABC):
     # Metodo che printa le informazioni sulle porte aperte
     def show_results(self): 
         for i in range(0, len(self.ip_list)):
-            print(f"\nIp: {self.ip_list[i].remote_host}")
+            console.print(f"\nTabella delle porte aperte per l' Ip: [bold blue]{self.ip_list[i].remote_host}[/bold blue]", style="bold")
             if self.ip_list[i].open_ports:
+                table = Table(box=None)
+                table.add_column("Porta", style="cyan")
+                table.add_column("Descrizione", style="white")
                 self.ip_list[i].open_ports.sort()
                 for port in self.ip_list[i].open_ports:
-                    print(f"{str(port)} : {self.ports_info[port]}")
+                    table.add_row(str(port), self.ports_info[port])
+                console.print(table)
             else:
-                print("Nessuna porta aperta!")
+                console.print("Nessuna porta aperta!", style="bold red")
     
     # Metodo che richiede gli indirizzi Ip da scannerizzare
     def add_ip(self):
-        stringa = get_host_ip(input("(CIDR format supported) Insert Ip or Domain: "))
+        console.print("(CIDR format supported) Insert Ip or Domain: ", style="italic", end="")
+        stringa = get_host_ip(input(""))
         network = ipaddress.IPv4Network(stringa)
         for el in list(network.hosts()):
             self.ip_list.append(Ip(str(el))) #aggiungo ad ip_list ogni ip del network come oggetto Ip
@@ -74,7 +81,8 @@ class Scan(ABC):
         self.request_ports()
         self.add_ip()
         try:
-            input("\nLo Scanner è pronto (ENTER per iniziare la scansione)\n")
+            console.print("\nLo Scanner è pronto (ENTER per iniziare la scansione)", style="blink italic")
+            input("")
         except KeyboardInterrupt:
             print("\nExiting...")
             sys.exit()
@@ -98,7 +106,7 @@ class Tcp(Scan):
     def scan_port(self, ip, port):
         pkt = IP(dst=ip.remote_host)/TCP(dport=port, flags='S')
         response = sr1(pkt, timeout=1, verbose=0)
-        print(f"Scanning {ip.remote_host} : {port}")
+        console.print(f"Scanning [bold blue]{ip.remote_host}[/bold blue] : [italic green]{port}[/italic green]")
         if response and response.haslayer(TCP):
             if response[TCP].flags == 'SA':  # SYN-ACK ricevuto -> porta aperta
                 return True
@@ -123,8 +131,8 @@ class Udp(Scan):
         udp_packet = IP(dst=ip.remote_host) / UDP(dport=port)
         try:
             # Invio del pacchetto e attesa di una risposta
-            response = sr1(udp_packet, timeout=1, verbose=False)
-            print(f"Scanning {ip.remote_host} : {port}")
+            response = sr1(udp_packet, timeout=0.5, verbose=False)
+            console.print(f"Scanning [bold blue]{ip.remote_host}[/bold blue] : [italic green]{port}[/italic green]")
             # Analisi della risposta
             if response is None:
                 # Nessuna risposta: la porta potrebbe essere aperta (UDP è connectionless)
@@ -132,7 +140,7 @@ class Udp(Scan):
             else:
                 return False
         except Exception as e:
-            print(f"Errore durante la scansione della porta {port}: {e}")
+            console.print(f"Errore durante la scansione della porta {port}: {e}", style="bold red")
             return False
 
 

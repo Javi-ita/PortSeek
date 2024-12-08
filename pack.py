@@ -1,6 +1,6 @@
 from utils import *
 from scan import *
-from scapy.all import IP, ICMP, TCP, UDP, DNS, DNSQR, sr1, Raw
+from scapy.all import IP, ICMP, TCP, UDP, DNS, DNSQR, sr, sr1, Raw
 import time
 
 class Pack:
@@ -29,37 +29,37 @@ class ICMP_Pack(Pack):
         # Invio del pacchetto e ricezione della risposta
         self.response = sr1(self.packet, timeout=1, verbose=False)
         start_time = time.time()
-        print(f"Ping in corso verso {self.remote_host}...")
+        console.print(f"Ping in corso verso [bold blue]{self.remote_host}[/bold blue]")
 
         # Controllo della risposta
         if self.response[ICMP].type == 0:
-            print(f"Echo Reply ricevuta da {self.response.src}: TTL={self.response[IP].ttl}") # TTL = Time To Live
+            console.print(f"Echo Reply ricevuta da [bold blue]{self.response.src}[/bold blue]: TTL={self.response[IP].ttl}") # TTL = Time To Live
             rtt = (time.time() - start_time)
             print(f"RTT: {rtt:.2f} s")
         elif self.response[ICMP].type == 3:
-            print(f"Destinazione {self.response.src} non raggiungibile.\n")
+            console.print(f"Destinazione [bold blue]{self.response.src}[/bold blue] non raggiungibile.", style="red")
             if self.response[ICMP].code == 0:
-                print(f"Network non raggiungibile")
+                console.print(f"Network non raggiungibile", style="red")
             elif self.response[ICMP].code == 1:
-                print(f"Host non raggiungibile")
+                console.print(f"Host non raggiungibile", style="red")
             elif self.response[ICMP].code == 3:
-                print(f"Porta non raggiungibile")
+                console.print(f"Porta non raggiungibile", style="red")
         elif self.response[ICMP].type == 11:
-            print(f"Limite di tempo TTL superato...")
+            console.print(f"Limite di tempo TTL superato...", style="red")
         else:
-            print(f"Nessuna risposta ricevuta da {self.remote_host}")
+            console.print(f"Nessuna risposta ricevuta da [bold blue]{self.remote_host}[/bold blue]")
 
     def get_info(self):
         if self.response[ICMP].type == 0:
-            print("\nInformazioni sul pacchetto ricevuto")
-            print(f"Numero di sequenza ricevuto: {self.response[ICMP].seq}")
+            console.print("\nInformazioni sul pacchetto ricevuto")
+            console.print(f"Numero di sequenza: [bold blue]{self.response[ICMP].seq}[/bold blue]", style="italic")
             if Raw in self.response:
                 received_payload = self.response[Raw].load
-                print(f"Payload ricevuto: {received_payload.decode()}")
+                console.print(f"Payload ricevuto: {received_payload.decode()}", style="italic")
             else:
-                print("Payload non presente")
+                console.print("Payload non presente", style="italic bold #808080")
         else:
-            print("Nessuna informazione disponibile\n")
+            console.print("Nessuna informazione disponibile\n", style="italic bold #808080")
 
     def start(self):
         self.set_remote_host()
@@ -91,9 +91,7 @@ class HTTP(Pack):
                 
                 # Verifica se il payload sembra contenere un messaggio HTTP
                 if "HTTP" in payload or "GET" in payload or "POST" in payload:
-                    print("=" * 50)
-                    print(f"Pacchetto da: {self.response[IP].src} a: {self.response[IP].dst}")
-                    
+                    console.print(f"Pacchetto da: [bold blue]{self.response[IP].src}[/bold blue] a: [bold blue]{self.response[IP].dst}[/bold blue]")
                     lines = payload.split("\r\n")
                     print(lines[0])
                     headers = {}
@@ -104,17 +102,16 @@ class HTTP(Pack):
                         elif line == "": 
                             break
                     
-                    print("Header HTTP:")
+                    console.print("Header HTTP:", style="italic bold")
                     for key, value in headers.items():
-                        print(f"{key}: {value}")
+                        console.print(f"[green]{key}[/green]: {value}")
                     
                     if "\r\n\r\n" in payload:
                         body = payload.split("\r\n\r\n", 1)[1]
                         if body.strip():
                             print(f"Corpo della richiesta/risposta HTTP:\n{body.strip()}")
-                    print("=" * 50)
             except Exception as e:
-                print(f"Errore nel processamento del pacchetto: {e}")
+                console.print(f"Errore nel processamento del pacchetto: {e}", style="bold red")
         else:
             print(f"Risposta grezza ricevuta: {self.response.show(dump=True)}")
 
@@ -136,7 +133,7 @@ class DNS_pack(Pack):
 
     def show_respone(self):
         if self.response.haslayer(DNS):
-            print(f"Risultato per {self.remote_host}:")
+            console.print(f"Risultato per [bold blue]{self.remote_host}[/bold blue]:")
             for i in range(self.response[DNS].ancount):
                 r = self.response[DNS].an[i]
                 print(f"  {r.rrname.decode()} -> {r.rdata}")
