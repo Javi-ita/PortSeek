@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from utils import *
-import socket
 import sys
 from ip import Ip
 import time
@@ -11,6 +10,7 @@ class Scan(ABC):
 
     DEFAULT_PORTS = ["22", "80"] # default se l'utente non specifica le porte da scansionare
     PORTS_DATA = "./ports.lists.json"
+    progress = 1
 
     def __init__(self):
         self.ports_info = {}
@@ -45,13 +45,23 @@ class Scan(ABC):
         start = time.time()
         threadpool_exec(self.append_port, self.ports_info.keys()) # richiama iterativamente append_port per ogni chiave nel dizionario
         rtt = (time.time() - start)
-        console.print(f"\nScansione completata in [bold blue]{rtt:.2f} secondi[/bold blue]")
+        console.print(f"\nScansione completata in [bold blue]{rtt:.2f} secondi[/bold blue]") # mostra la durata della scansione
         self.show_results()
     
-    def append_port(self, port): 
+    def append_port(self, port):
+        self.display_loading()
         for ip in self.ip_list:
             if self.scan_port(ip, port): # se scan_port restituisce True la porta viene aggiunta alla lista di porte aperte
                 ip.open_ports.append(port)
+    
+    # crea un display che visualizza il progresso della scansione
+    def display_loading(self):
+        bar_max_len = 48
+        bar_i_len = bar_max_len * self.progress // len(self.ports_info.keys())
+        bar = "#"*bar_i_len + "-"*(bar_max_len-bar_i_len)
+        bar_p = "%.1f" % (self.progress / len(self.ports_info.keys()) * 100)
+        self.progress+=1
+        console.print(f"|{bar}| {bar_p}%", end="\r", style="bold green")
     
     # Metodo che printa le informazioni sulle porte aperte
     def show_results(self): 
@@ -106,7 +116,6 @@ class Tcp(Scan):
     def scan_port(self, ip, port):
         pkt = IP(dst=ip.remote_host)/TCP(dport=port, flags='S')
         response = sr1(pkt, timeout=1, verbose=0)
-        console.print(f"Scanning [bold blue]{ip.remote_host}[/bold blue] : [italic green]{port}[/italic green]")
         if response and response.haslayer(TCP):
             if response[TCP].flags == 'SA':  # SYN-ACK ricevuto -> porta aperta
                 return True
@@ -132,10 +141,9 @@ class Udp(Scan):
         try:
             # Invio del pacchetto e attesa di una risposta
             response = sr1(udp_packet, timeout=0.5, verbose=False)
-            console.print(f"Scanning [bold blue]{ip.remote_host}[/bold blue] : [italic green]{port}[/italic green]")
+            #console.print(f"Scanning [bold blue]{ip.remote_host}[/bold blue] : [italic green]{port}[/italic green]")
             # Analisi della risposta
             if response is None:
-                # Nessuna risposta: la porta potrebbe essere aperta (UDP è connectionless)
                 return True
             else:
                 return False

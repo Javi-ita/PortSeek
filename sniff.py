@@ -1,6 +1,8 @@
 from scapy.all import IP, TCP, UDP, ICMP, Raw, DNS, DNSQR, DNSRR, sniff
 from utils import *
+import socket
 
+#metodo che processa il pacchetto ricevuto dal local host in base al protocollo 
 def process_packet(packet):
     if packet.haslayer(IP):
         console.print(f"\nPacchetto ricevuto da [bold blue]{packet[IP].src}[/bold blue] a [bold blue]{packet[IP].dst}[/bold blue]")
@@ -21,9 +23,8 @@ def process_packet(packet):
                     console.print(f"Query DNS per: {packet[DNSQR].qname.hex()}", style="italic")
                 elif packet[DNS].qr == 1:  
                     console.print(f"Risposta DNS: {packet[DNSRR].rdata}", style="italic")
-        
         elif packet.haslayer(ICMP):
-            console.print("Protocollo: [bold cyan]ICMP[/bold cyan]")
+            console.print("Protocollo: [bold cyan]ICMP[/bold cyan]")nn
             console.print(f"Tipo: [bold blue]{packet[ICMP].type}[/bold blue], Codice: [bold blue]{packet[ICMP].code}[/bold blue]")
         
         else:
@@ -31,15 +32,23 @@ def process_packet(packet):
     else:
         console.print("Pacchetto non ricevuto.", style="bold red")
 
+# metodo che richiede all'utente il numero, la durata e il filtro dello sniff
 def define_sniff():
     console.print("\nInserire impostazioni dello sniff in formato ('count' 'timeout' 'filter'): ", style="italic", end="")
     stringa = input("")
     if len(stringa) == 0:
         return None
-    ls = stringa.split(maxsplit=2)
-    ls[0] = int(ls[0])
-    ls[1] = int(ls[1])
-    return ls
+    while(True):
+        try:
+            ls = stringa.split(maxsplit=2)
+            ls[0] = int(ls[0])
+            ls[1] = int(ls[1])
+            return ls
+        except IndexError:
+            console.print("Formato dell'input sbagliato", style="bold red")
+            console.print("\nInserire impostazioni dello sniff in formato ('count' 'timeout' 'filter'): ", style="italic", end="")
+            stringa = input("")
+
 
 def start_sniff(count=10, timeout=10, msg="tcp"):
     sniff(count=count, timeout=timeout, filter=msg, prn=process_packet)

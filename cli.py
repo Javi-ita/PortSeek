@@ -5,16 +5,17 @@ import sys
 from sniff import *
 import pyfiglet
 from rich.table import Table
-import keyboard
 
 OPTIONS = ["Scan Ip", "Crea Pacchetto", "Sniff", "Exit"]
 
+# metodo che inizializza il menù di avvio
 def initialize():
-    console.print(pyfiglet.figlet_format(" PORTSEEK "), style="bold green")
-    console.print("#"*8 + "  Port Scanner Multifunzionale  " + "#"*8, style="bold green")
+    console.print(pyfiglet.figlet_format(" PORTSEEK "), style="bold magenta")
+    console.print("#"*8 + "  Port Scanner Multifunzionale  " + "#"*8, style="bold magenta")
     console.print("\nProject by Tobia Grimaldi, Matteo Quarta, Davide Padovano.", style="italic #808080")
     console.print("(Version 1.0)", style="italic #808080")
 
+# metodo che richiede il protocollo da usare nella scansione
 def scan():
     while True:
         console.print("Scan(tcp/udp): ", end="", style="bold white")
@@ -71,6 +72,7 @@ def create_table():
         table.add_row(f"[bold]{i}[/bold]", OPTIONS[i-1])
     return table
 
+#metodo con il ciclo di esecuzione del programma
 def menu():
     initialize()
     table = create_table()
@@ -82,7 +84,6 @@ def menu():
         except KeyboardInterrupt:
             console.print("\nExiting...", style="blink")
             sys.exit()
-
 
 if __name__ == "__main__":
     menu()

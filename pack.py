@@ -13,19 +13,18 @@ class Pack:
     def set_remote_host(self):
         self.remote_host = get_host_ip(input("Inserisci Ip o un Dominio: "))
 
-    
+
 class ICMP_Pack(Pack):
 
     def __init__(self):
         super().__init__()
         self.response = None
 
+    # Creazione del pacchetto ICMP
     def create_packet(self):
-        # Creazione del pacchetto ICMP Echo Request
         self.packet = IP(dst=self.remote_host) / ICMP()
         
     def send_packet(self):
-        
         # Invio del pacchetto e ricezione della risposta
         self.response = sr1(self.packet, timeout=1, verbose=False)
         start_time = time.time()
@@ -49,6 +48,7 @@ class ICMP_Pack(Pack):
         else:
             console.print(f"Nessuna risposta ricevuta da [bold blue]{self.remote_host}[/bold blue]")
 
+    # informazioni sulla risposta ricevuta
     def get_info(self):
         if self.response[ICMP].type == 0:
             console.print("\nInformazioni sul pacchetto ricevuto")
@@ -79,11 +79,12 @@ class HTTP(Pack):
         else:
             self.payload = payload
 
+    # creazione di un pacchetto con protocollo TCP
     def create_packet(self):
-        # Creazione del pacchetto ICMP Echo Request
         self.packet = IP(dst=self.remote_host) / TCP(dport=80, flags="S", seq=1000) / Raw(load=self.payload)
         self.response = sr1(self.packet, timeout=2, verbose=False)
 
+    # mostra risultato della risposta al pacchetto
     def show_response(self):
         if self.response.haslayer(TCP) and self.response.haslayer(Raw):
             try:
@@ -127,6 +128,7 @@ class DNS_pack(Pack):
         super().__init__()
         self.response = None
 
+    # crea un pacchetto con protocollo UDP
     def create_packet(self):
         packet = IP(dst="8.8.8.8") / UDP(dport=53) / DNS(rd=1, qd=DNSQR(qname=self.remote_host, qtype="A"))
         self.response = sr(packet, timeout=2, verbose=False)
