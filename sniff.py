@@ -1,6 +1,5 @@
 from scapy.all import IP, TCP, UDP, ICMP, Raw, DNS, DNSQR, DNSRR, sniff
 from utils import *
-import socket
 
 #metodo che processa il pacchetto ricevuto dal local host in base al protocollo 
 def process_packet(packet):
@@ -24,7 +23,7 @@ def process_packet(packet):
                 elif packet[DNS].qr == 1:  
                     console.print(f"Risposta DNS: {packet[DNSRR].rdata}", style="italic")
         elif packet.haslayer(ICMP):
-            console.print("Protocollo: [bold cyan]ICMP[/bold cyan]")nn
+            console.print("Protocollo: [bold cyan]ICMP[/bold cyan]")
             console.print(f"Tipo: [bold blue]{packet[ICMP].type}[/bold blue], Codice: [bold blue]{packet[ICMP].code}[/bold blue]")
         
         else:

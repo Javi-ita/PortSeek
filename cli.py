@@ -72,6 +72,14 @@ def create_table():
         table.add_row(f"[bold]{i}[/bold]", OPTIONS[i-1])
     return table
 
+"""def help():
+    console.print("[bold blue] Scan Ip[/bold blue]: permette di scansionare le porte di uno o più Ip" +
+                   " specificati dall'utente con protocollo TCP e UDP", style="italic white")
+    console.print("[bold blue] Crea Pacchetto[/bold blue]: crea un pacchetto e visualizza la risposta", style="italic white")
+    console.print("[bold blue] Sniff[/bold blue]: permette di sniffare i pacchetti ricevuti e inviati dal localhost" +
+                  "e printarne le informazioni", style="italic white")
+    console.print("Per specificare un range di IP utilizzare formato CIDR")"""
+
 #metodo con il ciclo di esecuzione del programma
 def menu():
     initialize()

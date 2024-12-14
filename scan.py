@@ -26,15 +26,22 @@ class Scan(ABC):
             self.ports_info[int(port)] = data[port][0]["description"]
 
     def request_ports(self):
-        console.print("\nPorte:", style="italic", end="")
-        stringa = input("") # Richiesta di porte da scannerizzare
-        if len(stringa) == 0:
-            self.get_ports()
-        elif stringa.lower() == "all":
-            self.get_all_ports()
-        else:
-            result = stringa.split(",")
-            self.get_ports(result)
+        while True:
+            try:
+                console.print("\nPorte:", style="italic", end="")
+                stringa = input("") # Richiesta di porte da scannerizzare
+                if len(stringa) == 0:
+                    self.get_ports()
+                    break
+                elif stringa.lower() == "all":
+                    self.get_all_ports()
+                    break
+                else:
+                    result = stringa.split(",")
+                    self.get_ports(result)
+                    break
+            except KeyError:
+                console.print("Formato di porte sbagliato", style="bold red")
 
     def get_all_ports(self):
         data = json_data(Scan.PORTS_DATA)
@@ -80,7 +87,7 @@ class Scan(ABC):
     
     # Metodo che richiede gli indirizzi Ip da scannerizzare
     def add_ip(self):
-        console.print("(CIDR format supported) Insert Ip or Domain: ", style="italic", end="")
+        console.print("Inserisci un Ip o un dominio: ", style="italic", end="")
         stringa = get_host_ip(input(""))
         network = ipaddress.IPv4Network(stringa)
         for el in list(network.hosts()):

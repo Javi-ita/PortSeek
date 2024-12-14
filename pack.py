@@ -9,16 +9,17 @@ class Pack:
         self.packet = None
         self.payload = ""
         self.remote_host = ""
+        self.response = None
 
     def set_remote_host(self):
-        self.remote_host = get_host_ip(input("Inserisci Ip o un Dominio: "))
+            self.remote_host = get_host_ip(input("Inserisci Ip o un Dominio: "))
+        
 
 
 class ICMP_Pack(Pack):
 
     def __init__(self):
         super().__init__()
-        self.response = None
 
     # Creazione del pacchetto ICMP
     def create_packet(self):
@@ -71,7 +72,6 @@ class HTTP(Pack):
 
     def __init__(self):
         super().__init__()
-        self.response = None
     
     def set_payload(self, payload=None):
         if not payload:
@@ -126,7 +126,6 @@ class DNS_pack(Pack):
 
     def __init__(self):
         super().__init__()
-        self.response = None
 
     # crea un pacchetto con protocollo UDP
     def create_packet(self):
