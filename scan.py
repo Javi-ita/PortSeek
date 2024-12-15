@@ -68,7 +68,7 @@ class Scan(ABC):
         bar = "#"*bar_i_len + "-"*(bar_max_len-bar_i_len)
         bar_p = "%.1f" % (self.progress / len(self.ports_info.keys()) * 100)
         self.progress+=1
-        console.print(f"|{bar}| {bar_p}%", end="\r", style="bold green")
+        console.print(f"|{bar}| {bar_p}%", end="\r", style="bold magenta")
     
     # Metodo che printa le informazioni sulle porte aperte
     def show_results(self): 

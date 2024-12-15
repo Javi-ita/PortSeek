@@ -129,22 +129,56 @@ class DNS_pack(Pack):
 
     # crea un pacchetto con protocollo UDP
     def create_packet(self):
-        packet = IP(dst="8.8.8.8") / UDP(dport=53) / DNS(rd=1, qd=DNSQR(qname=self.remote_host, qtype="A"))
-        self.response = sr(packet, timeout=2, verbose=False)
+        self.packet = IP(dst="8.8.8.8") / UDP(dport=53) / DNS(rd=1, qd=DNSQR(qname=self.remote_host, qtype="A"))
+        
 
-    def show_respone(self):
-        if self.response.haslayer(DNS):
-            console.print(f"Risultato per [bold blue]{self.remote_host}[/bold blue]:")
-            for i in range(self.response[DNS].ancount):
-                r = self.response[DNS].an[i]
-                print(f"  {r.rrname.decode()} -> {r.rdata}")
+    def show_response(self):
+        start_time = time.time()
+        self.response = sr(self.packet, timeout=2, verbose=False)
+        # Controlla che la risposta contenga pacchetti validi
+        if not self.response or len(self.response[0]) == 0:
+            console.print("[INFO] Nessuna risposta ricevuta o errore nella comunicazione.", style="bold red")
+            return None
+
+        answered_packets = self.response[0] 
+        parsed_data = [] 
+        
+        for sent, received in answered_packets:
+            if DNS in received:
+                dns_layer = received[DNS]
+                record = {
+                    "dominio": dns_layer.qd.qname.decode() if dns_layer.qdcount > 0 else None,
+                    "tipo_richiesta": dns_layer.qd.qtype if dns_layer.qdcount > 0 else None,
+                    "risposte": []
+                }
+                if dns_layer.ancount > 0:
+                    for i in range(dns_layer.ancount):
+                        answer = dns_layer.an[i]
+                        record["risposte"].append({
+                            "nome": answer.rrname.decode(),
+                            "tipo": answer.type,
+                            "dati": answer.rdata
+                        })
+                parsed_data.append(record)
+        if parsed_data:
+            for entry in parsed_data:
+                console.print(f"[bold blue]Dominio[/bold blue]: {entry['dominio']}")
+                console.print(f"[bold blue]Tipo Richiesta[/bold blue]: {entry['tipo_richiesta']}")
+                if entry['risposte']:
+                    print("Risposte:")
+                    for response in entry['risposte']:
+                        print(f" - Nome: {response['nome']}, Tipo: {response['tipo']}, Dati: {response['dati']}")
+                else:
+                    print("Nessuna risposta.")
+            rtt = (time.time() - start_time)
+            console.print(f"RTT: {rtt:.2f} s", style="italic bold")
         else:
-            print("Nessuna risposta dal server DNS 8.8.8.8.")
+            console.print("[INFO] Nessuna risposta DNS valida trovata.", style="italic bold #808080")
 
     def start(self):
         self.set_remote_host()
         self.create_packet()
-        self.show_respone()
+        self.show_response()
 
         
         

@@ -43,10 +43,11 @@ def define_sniff():
             ls[0] = int(ls[0])
             ls[1] = int(ls[1])
             return ls
-        except IndexError:
+        except Exception:
             console.print("Formato dell'input sbagliato", style="bold red")
             console.print("\nInserire impostazioni dello sniff in formato ('count' 'timeout' 'filter'): ", style="italic", end="")
             stringa = input("")
+
 
 
 def start_sniff(count=10, timeout=10, msg="tcp"):
